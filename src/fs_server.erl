@@ -15,9 +15,9 @@
 
 -record(state, {event_handler, port, path, backend, cwd, crashes}).
 
-notify(EventHandler, file_event = A, Msg) ->
-    Key = {fs, A},
-    gen_event:notify(EventHandler, {self(), Key, Msg}).
+-spec notify(term(), file_event, file:filename_all()) -> ok.
+notify(EventHandler, file_event = Key, Msg) ->
+    gen_event:notify(EventHandler, {fs, self(), Key, Msg}).
 
 start_link(Name, EventHandler, Backend, Path, Cwd) ->
     gen_server:start_link({local, Name},
