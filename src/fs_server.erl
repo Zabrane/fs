@@ -15,6 +15,12 @@
 
 -record(state, {event_handler, port, path, backend, cwd, crashes}).
 
+notify_async(<<Line/binary>>, Backend, EventHandler) ->
+    erlang:spawn(fun() ->
+                Events = Backend:line_to_event(Line),
+                notify(EventHandler, file_events, Events)
+            end).
+
 -spec notify(term(), file_events, file:filename_all()) -> ok.
 notify(EventHandler, file_events, Msg) ->
     gen_event:notify(EventHandler, {fs, self(), file_events, Msg}).
@@ -43,16 +49,14 @@ handle_info({_Port, {data, <<Line/binary>>}},
             #state{event_handler = EventHandler,
                    backend = Backend} =
                 State) ->
-    Events = Backend:line_to_event(Line),
-    notify(EventHandler, file_events, Events),
+    notify_async(Line, Backend, EventHandler),
     {noreply, State};
 
 handle_info({_Port, {data, {eol, Line}}},
             #state{event_handler = EventHandler,
                backend = Backend} =
                 State) ->
-    Event = Backend:line_to_event(Line),
-    notify(EventHandler, file_events, Event),
+    notify_async(Line, Backend, EventHandler),
     {noreply, State};
 
 handle_info({_Port, {data, {noeol, Line}}}, State) ->
