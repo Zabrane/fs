@@ -9,7 +9,9 @@
          code_change/3,
          terminate/2]).
 
-init([Pid]) -> {ok, Pid}.
+init([Pid]) ->
+    erlang:process_flag(message_queue_data, off_heap),
+   {ok, Pid}.
 
 handle_event(Event, Pid) ->
     Pid ! Event,
