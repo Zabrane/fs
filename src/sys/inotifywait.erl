@@ -17,7 +17,7 @@ known_events() -> [created, deleted, renamed, closed, modified, isdir, attribute
                   3,87,12,120,0,7,25,120,0,71,0>>}).
 
 join([EventName|R]) ->
-    join(R, ["-e",EventName]).
+    join(R, ["-m", "-e",EventName]).
 
 join([EventName|R], Acc) ->
     join(R, ["-e", EventName | Acc]);
@@ -29,8 +29,7 @@ event_names() ->
 
 start_port(Path, Cwd) ->
     Path1 = filename:absname(Path),
-    Args = ["-c", "inotifywait \"$0\" \"$@\" & PID=$!; read a; kill $PID",
-            "-m" ] ++
+    Args = ["-c", "inotifywait \"$0\" \"$@\" & PID=$!; read a; kill $PID" ] ++
             event_names() ++
             [ "--quiet", Path1],
     erlang:open_port({spawn_executable, os:find_executable("sh")},
