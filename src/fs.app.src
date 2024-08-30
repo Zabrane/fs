@@ -4,7 +4,8 @@
   {registered, []},
   {applications, [kernel,stdlib]},
   {mod, { fs_app, []}},
-  {env, [ {backwards_compatible, true} ]},
+  {env, [ {backwards_compatible, true}
+        , {event_names, ["modify", "close_write", "moved_to", "moved_from", "create", "delete", "attrib"]} ]},
   {maintainers,["Maxim Sokhatsky", "Vladimir Kirillov"]},
   {licenses, ["ISC"]},
   {links,[{"Github","https://github.com/synrc/fs"}]}
