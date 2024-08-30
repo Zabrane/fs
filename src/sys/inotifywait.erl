@@ -11,9 +11,9 @@ start_port(Path, Cwd) ->
     %%        "-m", "-e", "modify", "-e", "close_write", "-e", "moved_to", "-e", "moved_from", "-e", "create", "-e", "delete",
     %%        "-e", "attrib", "--quiet", "-r", Path1],
     Args = ["-c", "inotifywait \"$0\" \"$@\" & PID=$!; read a; kill $PID",
-            "-m", "-e", "close_write", "--quiet", "--quiet", Path1],
+            "-m", "-e", "close_write", "--quiet", Path1],
     erlang:open_port({spawn_executable, os:find_executable("sh")},
-        [stream, exit_status, binary, {line, 16384}, {args, Args}, {cd, Cwd}]).
+        [stream, exit_status, binary, {line, 1000000}, {args, Args}, {cd, Cwd}]).
 
 line_to_event(Line0) ->
     Line = unicode:characters_to_list(Line0, utf8),   
