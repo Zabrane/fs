@@ -17,19 +17,21 @@ known_events() -> [created, deleted, renamed, closed, modified, isdir, attribute
                   3,87,12,120,0,7,25,120,0,71,0>>}).
 
 join([EventName|R]) ->
-join(R, ["-e",EventName]).
+    join(R, ["-e",EventName]).
 
 join([EventName|R], Acc) ->
-join(R, ["-e", EventName | Acc]);
+    join(R, ["-e", EventName | Acc]);
 join([], Acc) ->
-Acc.
+    Acc.
+
+event_names() ->
+    join(application:get_env(fs, event_names, [ "modify", "close_write", "moved_to", "moved_from", "create", "delete", "attrib" ])).
 
 start_port(Path, Cwd) ->
     Path1 = filename:absname(Path),
-    Events = [ "modify", "close_write", "moved_to", "moved_from", "create", "delete", "attrib" ],
     Args = ["-c", "inotifywait \"$0\" \"$@\" & PID=$!; read a; kill $PID",
             "-m" ] ++
-            join(Events) ++
+            event_names() ++
             [ "--quiet", Path1],
     erlang:open_port({spawn_executable, os:find_executable("sh")},
         [stream, exit_status, binary, use_stdio, {args, Args}, {cd, Cwd}]).
