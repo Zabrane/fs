@@ -15,9 +15,9 @@
 
 -record(state, {event_handler, port, path, backend, cwd, crashes}).
 
--spec notify(term(), file_event, file:filename_all()) -> ok.
-notify(EventHandler, file_event = Key, Msg) ->
-    gen_event:notify(EventHandler, {fs, self(), Key, Msg}).
+-spec notify(term(), file_events, file:filename_all()) -> ok.
+notify(EventHandler, file_events, Msg) ->
+    gen_event:notify(EventHandler, {fs, self(), file_events, Msg}).
 
 start_link(Name, EventHandler, Backend, Path, Cwd) ->
     gen_server:start_link({local, Name},
@@ -39,16 +39,25 @@ handle_call(_Request, _From, State) ->
 
 handle_cast(_Msg, State) -> {noreply, State}.
 
-handle_info({_Port, {data, {eol, Line}}},
+handle_info({_Port, {data, <<Line/binary>>}},
             #state{event_handler = EventHandler,
                    backend = Backend} =
                 State) ->
-    Event = Backend:line_to_event(Line),
-    notify(EventHandler, file_event, Event),
+    Events = Backend:line_to_event(Line),
+    notify(EventHandler, file_events, Events),
     {noreply, State};
+
+handle_info({_Port, {data, {eol, Line}}},
+            #state{event_handler = EventHandler,
+               backend = Backend} =
+                State) ->
+    Event = Backend:line_to_event(Line),
+    notify(EventHandler, file_events, Event),
+    {noreply, State};
+
 handle_info({_Port, {data, {noeol, Line}}}, State) ->
     error_logger:error_msg("~p line too long: ~p, ignoring~n",
-                           [?SERVER, Line]),
+                            [?SERVER, Line]),
     {noreply, State};
 
 handle_info({_Port, {exit_status, Status}}, #state{path=Path,backend=Backend,cwd=Cwd,crashes=Crashes} = State) ->
@@ -56,7 +65,8 @@ handle_info({_Port, {exit_status, Status}}, #state{path=Path,backend=Backend,cwd
     timer:sleep(100*(Crashes+1)*(Crashes+1)),
     {noreply, State#state{port=Backend:start_port(Path, Cwd),crashes=Crashes+1}};
 
-handle_info(_Info, State) -> {noreply, State}.
+handle_info(_Info, State) ->
+    {noreply, State}.
 
 terminate(_Reason, #state{port = Port}) ->
     catch port_close(Port),
