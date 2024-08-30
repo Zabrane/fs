@@ -20,4 +20,4 @@ line_to_event(Line0) ->
     [_, Flags2] = string:tokens(Flags1, [$=]),
     {ok, T, _} = erl_scan:string(Flags2 ++ "."),
     {ok, Flags} = erl_parse:parse_term(T),
-    {Path, Flags}.
+    [{Path, Flags}].
